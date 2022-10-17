@@ -1,0 +1,7 @@
+django
+requests
+pandas
+pyarrow
+pyspark
+psycopg2-binary
+python-dotenv
