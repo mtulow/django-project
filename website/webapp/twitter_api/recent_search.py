@@ -2,6 +2,7 @@ from functools import singledispatch
 import os
 import csv
 import json
+from typing import Iterator
 import requests
 import dateutil.parser
 import pandas as pd
@@ -65,7 +66,7 @@ def csv_headers():
     """
     Create the headers for the CSV file.
     """
-    headers = ['author id', 'created_at', 'geo', 'id','lang', 'like_count',
+    headers = ['author_id', 'created_at', 'geo', 'id','lang', 'like_count',
                'quote_count', 'reply_count', 'retweet_count', 'source', 'tweet']
     return headers
 
@@ -85,9 +86,9 @@ def unpack_row(row: dict)-> tuple:
 
     # 3. Geolocation
     if ('geo' in row):   
-        geo = row['geo']['place_id']
+        geo = row['geo'].get('place_id')
     else:
-        geo = " "
+        geo = None
 
     # 4. Tweet ID
     tweet_id = row['id']
@@ -115,12 +116,12 @@ def unpack_row(row: dict)-> tuple:
     
     return out
 
-def collect_rows(response: dict)-> list:
+def collect_rows(response: dict)-> Iterator:
     """
     Collect the rows from the response.
     """
-    return list(map(unpack_row, response['data']))
-
+    return map(unpack_row, response['data'])
+    
 def create_csv_file(filename: str)-> str:
     """
     Create a CSV file from the data.
@@ -159,9 +160,8 @@ def get_dataframe():
     return
 @get_dataframe.register
 def _(response: dict)-> pd.DataFrame:
-    return pd.DataFrame(response['data'], columns=csv_headers())
     # Create a pandas dataframe from the response
-    return pd.DataFrame(response['data'], columns=csv_headers())
+    return pd.DataFrame(map(unpack_row, response['data']), columns=csv_headers())
 @get_dataframe.register
 def _(filename: str)-> pd.DataFrame:
     """
@@ -220,8 +220,8 @@ def main():
     print(metadata)
     print()
     print(df)
-    print()
-    print(json.dumps(json_response['data'], indent=4, sort_keys=True))
+    # print()
+    # print(json.dumps(json_response['data'], indent=4, sort_keys=True))
     
     store_in_file(json_response, 'data.csv')
 
