@@ -5,3 +5,4 @@ pyarrow
 pyspark
 psycopg2-binary
 python-dotenv
+tweepy
